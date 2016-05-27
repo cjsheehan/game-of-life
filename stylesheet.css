@@ -17,10 +17,10 @@
     float: left; 
 }
 
-.on {
+.alive {
     background-color: black;
 }
 
-.off {
+.dead {
     background-color: white;
 }

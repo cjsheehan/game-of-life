@@ -1,14 +1,50 @@
 
-var gol = (function() {
-    var grid = [];
-    
-    var initGame = function(gridSize) {
-        grid = randGrid(gridSize);
-        console.log(grid);
-        golDraw.drawGrid(grid);
-    };  
+// Any live cell with fewer than two live neighbours dies, as if caused by under-population.
+// Any live cell with two or three live neighbours lives on to the next generation.
+// Any live cell with more than three live neighbours dies, as if by over-population.
+// Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
 
-    var randGrid = function(gridSize) {
+var gol = (function() {
+    const RunEnum = {
+        RUN: 0,
+        STOP: 1,
+    }
+    var grid = [];
+    var isRunning = false;
+    
+    var gen = 0;
+    var runControl;
+    var runState = RunEnum.STOP;
+    var maxGens = 10;
+    var frameTime = 500; // ms
+    var gridSize;
+    
+    var start = function(size) {
+        if(!isRunning) {
+            isRunning = true;
+            gridSize = size;
+            runState = RunEnum.RUN; 
+            gen = 0;
+            grid = seedGrid(gridSize);
+            runControl = setInterval(function() { evolve(grid); }, frameTime);
+        }
+    };  
+    
+    var stop = function() {
+        if(isRunning) {
+            clearTimeout(runControl);
+            runState = RunEnum.STOP;
+            isRunning = false;
+        }
+    }
+    
+    var evolve = function(grid) {
+        grid = seedGrid(gridSize);
+        golDraw.drawGrid(grid);
+        gen++;
+    };
+
+    var seedGrid = function(gridSize) {
         var grid = [];
         for(i = 0; i < gridSize; i++) {
             var row = [];
@@ -25,7 +61,8 @@ var gol = (function() {
     }    
     
     return {
-        initGame: initGame
+        start: start,
+        stop: stop
     }    
     
 })();
@@ -37,25 +74,25 @@ var golDraw = (function() {
     
     var drawGrid = function(grid) {
         var rowSize = grid.length;
-        console.log("rowSize=" + rowSize);
         var points = '';
-        var on = "on";
-        var off = "off";
-        var ptState = on;
+        var alive = "alive";
+        var dead = "dead";
+        var ptState = alive;
 
         initGridDimensions(rowSize);
         for(i = rowSize - 1; i >= 0; i--) {
             for(j = 0; j < rowSize; j++) { 
-                // console.log(i + ':' + j + ':' + grid[i][j]);
+                console.log(i + ':' + j + ':' + grid[i][j]);
                 if(grid[i][j] === 0) {
-                    ptState = off;
+                    ptState = dead;
                 } else {
-                    ptState = on;
+                    ptState = alive;
                 }
                 points += "<div id=\"pt"  + i + j + "\" " + "class=\"point " 
                     + ptState + "\">" + i + ',' + j + "</div>";
             }
         }
+        $('#grid').empty();
         $('#grid').append(points); 
     };
     
