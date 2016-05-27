@@ -68,7 +68,7 @@ var gol = (function() {
 })();
 
 var golDraw = (function() {
-    var ptWidth = 100;
+    var ptWidth = 20;
     var gridWidth = 100;
     var gridHeight = 100;
     
@@ -89,7 +89,7 @@ var golDraw = (function() {
                     ptState = alive;
                 }
                 points += "<div id=\"pt"  + i + j + "\" " + "class=\"point " 
-                    + ptState + "\">" + i + ',' + j + "</div>";
+                    + ptState + "\"></div>";
             }
         }
         $('#grid').empty();
