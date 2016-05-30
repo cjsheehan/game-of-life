@@ -1,9 +1,3 @@
-
-// Any live cell with fewer than two live neighbours dies, as if caused by under-population.
-// Any live cell with two or three live neighbours lives on to the next generation.
-// Any live cell with more than three live neighbours dies, as if by over-population.
-// Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-
 var gol = (function() {
     const RunEnum = {
         RUN: 0,
@@ -15,11 +9,26 @@ var gol = (function() {
         DEAD: 0,        
     }
     
+    const RuleEnum = {
+        UNDER_POP: 0,
+        NEXT_GEN: 1,
+        OVER_POP: 2,
+        REPRODUCE: 3
+    };
     
+    const CellLocation = {
+        LOWER_LEFT: 0,
+        LOWER_RIGHT: 1,
+        TOP_LEFT: 2,
+        TOP_RIGHT: 3,
+        LOWER_ROW: 4,
+        UPPER_ROW: 5,
+        LEFT_COLUMN: 6,
+        RIGHT_COLUMN: 7
+    };
     
     var grid = [];
     var isRunning = false;
-    
     var gen = 0;
     var runControl;
     var runState = RunEnum.STOP;
@@ -34,7 +43,10 @@ var gol = (function() {
             runState = RunEnum.RUN; 
             gen = 0;
             grid = seedGrid(gridSize);
-            runControl = setInterval(function() { evolve(grid); }, frameTime);
+            golDraw.drawGrid(grid);
+            // testArray();
+            evolve(grid);
+            //runControl = setInterval(function() { evolve(grid); }, frameTime);
         }
     };  
     
@@ -47,25 +59,28 @@ var gol = (function() {
     };
     
     var evolve = function(grid) {
-        for(rule in RuleEnum) {
+        var last = grid;
+        for(var rule in RuleEnum) {
             next = [];
-            for(i = 0; i < gridSize; i++) {
+            for(var i = 0; i < gridSize; i++) {
                 var row = [];
-                for(j = 0; j < gridSize; j++) {  
-                    row[j] = evalCell(i, j, next, rule);
+                for(var j = 0; j < gridSize; j++) {  
+                    row[j] = evalCell(i, j, last, RuleEnum[rule]);
+                    // console.log(i, ':', j, ':', row[j] );
                 }
                 next.push(row)
             }
+            last = next;
         }
-        golDraw.drawGrid(grid);
+        golDraw.drawGrid(next);
         gen++;
     };
 
     var seedGrid = function(gridSize) {
         var grid = [];
-        for(i = 0; i < gridSize; i++) {
+        for(var i = 0; i < gridSize; i++) {
             var row = [];
-            for(j = 0; j < gridSize; j++) {  
+            for(var j = 0; j < gridSize; j++) {  
                 row[j] = randInt(0,1);
             }
             grid.push(row);
@@ -76,53 +91,54 @@ var gol = (function() {
     var randInt = function(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };  
-        
-    const RuleEnum = {
-        UNDER_POP: 0,
-        NEXT_GEN: 1,
-        OVER_POP: 2,
-        REPRODUCE: 3
-    };
     
+    var testArray = function () {
+        var array = [ [0, 1, 2, 3], [4, 5, 6, 7]];
+        for(var i = 0; i < array.length; i++) {
+            for(var j = 0; j < array[i].length; j++) {  
+                console.log(i, ':', j, ':', array[i][j]);
+            }
+        }
+        
+    };
+           
     function evalCell(x, y, grid, rule) {
-        var neighbourhood = [ grid[x][y], grid[x][y+1], grid[x+1][y+1],
-                              grid[x+1][y], grid[x+1][y-1], grid[x][y-1],
-                              grid[x-1][y-1], grid[x-1][y], grid[x-1][y-1] ];  
-                                    
+        console.log(x + ':' + y + ':' + grid[x][y]);
+        var neighbourhood = genNeighbourhood(x, y, grid);
         var cellState = grid[x][y];
         var numNeighbours = neighbourhood.length;
         var numLiveNeighbours = 0;
-        for(i = 0; i < numNeighbours; i++) {
+        for(var i = 0; i < numNeighbours; i++) {
               if(neighbourhood[i] === CellEnum.ALIVE) {
                   numLiveNeighbours++;
               }         
         }
         
         switch (rule) {
-            case UNDER_POP:
+            case RuleEnum.UNDER_POP:
                 // 1. Any live cell with fewer than two live neighbours dies, as if caused by under-population. 
-                if(grid[x][y] === RuleEnum.ALIVE && numLiveNeighbours < 2) {
+                if(grid[x][y] === CellEnum.ALIVE && numLiveNeighbours < 2) {
                      cellState = CellEnum.ALIVE;
                 }
                 break;
             
-            case NEXT_GEN:
+            case RuleEnum.NEXT_GEN:
                 // 2. Any live cell with two or three live neighbours lives on to the next generation.
-                if(grid[x][y] === RuleEnum.ALIVE && numLiveNeighbours === 2 || numLiveNeighbours === 3) {
+                if(grid[x][y] === CellEnum.ALIVE && numLiveNeighbours === 2 || numLiveNeighbours === 3) {
                      cellState = CellEnum.ALIVE;
                 }
                 break;
             
-            case OVER_POP:
+            case RuleEnum.OVER_POP:
                 // 3. Any live cell with more than three live neighbours dies, as if by over-population.
-                if(grid[x][y] === RuleEnum.ALIVE && numLiveNeighbours > 3) {
+                if(grid[x][y] === CellEnum.ALIVE && numLiveNeighbours > 3) {
                     cellState = CellEnum.DEAD;
                 }
                 break;
             
-            case REPRODUCE:
+            case RuleEnum.REPRODUCE:
                 // 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-                if(grid[x][y] === RuleEnum.DEAD && numLiveNeighbours === 2) {
+                if(grid[x][y] === CellEnum.DEAD && numLiveNeighbours === 2) {
                     cellState = CellEnum.ALIVE
                 }
                 break;
@@ -130,6 +146,41 @@ var gol = (function() {
         return cellState;
     };
     
+    var genNeighbourhood = function(x, y, grid) {
+        var neighbourhood = [];    
+        if(x === 0 && y === 0) {
+            // LOWER_LEFT
+            neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x+1][y] ];
+        } else if(x === gridSize-1 && y === 0) {
+            // LOWER_RIGHT
+            neighbourhood = [ grid[x][y+1], grid[x-1][y], grid[x-1][y+1],  ];
+        } else if(x === 0 && y === gridSize-1) {
+            // TOP_LEFT
+            neighbourhood = [ grid[x+1][y], grid[x+1][y-1], grid[x][y-1] ];
+        } else if(x === gridSize-1 && y === gridSize-1) {
+            // TOP_RIGHT
+            neighbourhood = [ grid[x][y-1], grid[x-1][y-1], grid[x-1][y] ];
+        } else if(x === 0) {
+            // LOWER_ROW
+            neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x+1][y], grid[x-1][y], grid[x-1][y+1] ];
+        } else if(x === gridSize-1) {
+            // UPPER_ROW
+            neighbourhood = [ grid[x+1][y], grid[x+1][y-1], grid[x][y-1], grid[x-1][y-1], grid[x-1][y] ];
+        } else if(y === 0) {
+            // LEFT_COLUMN
+            neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x][y+1], grid[x+1][y-1], grid[x][y-1] ];
+        } else if(y === gridSize-1) {
+            // RIGHT_COLUMN
+            neighbourhood = [ grid[x][y+1], grid[x][y-1], grid[x-1][y-1], grid[x-1][y], grid[x-1][y+1] ];
+        } else {
+            // CENTRAL
+            neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x+1][y], grid[x+1][y-1], 
+                                grid[x][y-1], grid[x-1][y-1], grid[x-1][y], grid[x-1][y+1] ];
+        }
+       
+        return neighbourhood;
+    };
+      
     return {
         start: start,
         stop: stop
@@ -150,9 +201,9 @@ var golDraw = (function() {
         var cellState = alive;
 
         initGridDimensions(rowSize);
-        for(i = rowSize - 1; i >= 0; i--) {
-            for(j = 0; j < rowSize; j++) { 
-                console.log(i + ':' + j + ':' + grid[i][j]);
+        for(var i = rowSize - 1; i >= 0; i--) {
+            for(var j = 0; j < rowSize; j++) { 
+                // console.log(i + ':' + j + ':' + grid[i][j]);
                 if(grid[i][j] === 0) {
                     cellState = dead;
                 } else {
