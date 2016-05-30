@@ -42,11 +42,11 @@ var gol = (function() {
             gridSize = size;
             runState = RunEnum.RUN; 
             gen = 0;
-            grid = seedGrid(gridSize);
+            // grid = seedGrid(gridSize);
+            grid = seedKnown();
             golDraw.drawGrid(grid);
-            // testArray();
-            evolve(grid);
-            //runControl = setInterval(function() { evolve(grid); }, frameTime);
+            // evolve(grid);
+            runControl = setInterval(function() { evolve(); }, frameTime);
         }
     };  
     
@@ -58,23 +58,33 @@ var gol = (function() {
         }
     };
     
-    var evolve = function(grid) {
+    var evolve = function() {
         var last = grid;
+        gen++;
+        console.log("gen:" + gen); 
+        console.log(grid);
         for(var rule in RuleEnum) {
-            next = [];
+            var next = [];
+            console.log("rule:" + rule); 
             for(var i = 0; i < gridSize; i++) {
                 var row = [];
                 for(var j = 0; j < gridSize; j++) {  
-                    // (j, i) === (x, y)
                     row[j] = evalCell(j, i, last, RuleEnum[rule]);
-                    // console.log(i, ':', j, ':', row[j] );
                 }
-                next.push(row)
+                console.log(i + ':' + row);
+                next.push(row);
             }
+            // console.log("rule:" + rule);
+            console.log("gen:" + gen + "next:" + next); 
+            golDraw.drawGrid(next); 
+            // console.log("gen:" + gen + "last:" + last);
+            // console.log(last);
+            // console.log("gen:" + gen + "next:" + next);
+            // console.log(next);
             last = next;
         }
-        golDraw.drawGrid(next);
-        gen++;
+        grid = next;
+        console.log(grid);
     };
 
     var seedGrid = function(gridSize) {
@@ -88,23 +98,30 @@ var gol = (function() {
         }
         return grid;
     };  
+    
+    var seedKnown = function(gridSize) {
+        var known = [[0,0,0,0], [0,1,0,0],[0,1,1,0],[0,0,0,0]];
+        
+        for(var i = 0; i < known.length; i++) {
+            console.log(i + ':' + known[i]);
+        }
+        return known;
+        // for(var i = 0; i < gridSize; i++) {
+        //     var row = [];
+        //     for(var j = 0; j < gridSize; j++) {  
+        //         if()
+        //     }
+        //     grid.push(row);
+        // }
+        // return grid;
+    }; 
 
     var randInt = function(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };  
-    
-    var testArray = function () {
-        var array = [ [0, 1, 2, 3], [4, 5, 6, 7]];
-        for(var i = 0; i < array.length; i++) {
-            for(var j = 0; j < array[i].length; j++) {  
-                console.log(i, ':', j, ':', array[i][j]);
-            }
-        }
-        
-    };
-           
+      
     function evalCell(x, y, grid, rule) {
-        console.log(x + ':' + y + ':' + grid[x][y]);
+        // console.log(x + ':' + y + ':' + grid[x][y]);
         var neighbourhood = genNeighbourhood(x, y, grid);
         var cellState = grid[x][y];
         var numNeighbours = neighbourhood.length;
@@ -139,7 +156,7 @@ var gol = (function() {
             
             case RuleEnum.REPRODUCE:
                 // 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-                if(grid[x][y] === CellEnum.DEAD && numLiveNeighbours === 2) {
+                if(grid[x][y] === CellEnum.DEAD && numLiveNeighbours === 3) {
                     cellState = CellEnum.ALIVE
                 }
                 break;
