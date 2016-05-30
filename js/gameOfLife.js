@@ -65,7 +65,8 @@ var gol = (function() {
             for(var i = 0; i < gridSize; i++) {
                 var row = [];
                 for(var j = 0; j < gridSize; j++) {  
-                    row[j] = evalCell(i, j, last, RuleEnum[rule]);
+                    // (j, i) === (x, y)
+                    row[j] = evalCell(j, i, last, RuleEnum[rule]);
                     // console.log(i, ':', j, ':', row[j] );
                 }
                 next.push(row)
@@ -118,7 +119,7 @@ var gol = (function() {
             case RuleEnum.UNDER_POP:
                 // 1. Any live cell with fewer than two live neighbours dies, as if caused by under-population. 
                 if(grid[x][y] === CellEnum.ALIVE && numLiveNeighbours < 2) {
-                     cellState = CellEnum.ALIVE;
+                     cellState = CellEnum.DEAD;
                 }
                 break;
             
@@ -160,16 +161,16 @@ var gol = (function() {
         } else if(x === gridSize-1 && y === gridSize-1) {
             // TOP_RIGHT
             neighbourhood = [ grid[x][y-1], grid[x-1][y-1], grid[x-1][y] ];
-        } else if(x === 0) {
+        } else if(y === 0) {
             // LOWER_ROW
             neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x+1][y], grid[x-1][y], grid[x-1][y+1] ];
-        } else if(x === gridSize-1) {
+        } else if(y === gridSize-1) {
             // UPPER_ROW
             neighbourhood = [ grid[x+1][y], grid[x+1][y-1], grid[x][y-1], grid[x-1][y-1], grid[x-1][y] ];
-        } else if(y === 0) {
+        } else if(x === 0) {
             // LEFT_COLUMN
             neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x][y+1], grid[x+1][y-1], grid[x][y-1] ];
-        } else if(y === gridSize-1) {
+        } else if(x === gridSize-1) {
             // RIGHT_COLUMN
             neighbourhood = [ grid[x][y+1], grid[x][y-1], grid[x-1][y-1], grid[x-1][y], grid[x-1][y+1] ];
         } else {
