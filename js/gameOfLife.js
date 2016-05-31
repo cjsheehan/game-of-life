@@ -35,7 +35,7 @@ var gol = (function() {
     var runControl;
     var runState = RunEnum.STOP;
     var maxGens = 10;
-    var frameTime = 500; // ms
+    var frameTime = 200; // ms
     var gridSize;
     
     var start = function(size) {
@@ -44,8 +44,8 @@ var gol = (function() {
             gridSize = size;
             runState = RunEnum.RUN; 
             gen = 0;
-            // grid = seedGrid(gridSize);
-            grid = seedKnown();
+            grid = seedGrid(gridSize);
+            // grid = seedKnown(gridSize);
             golDraw.drawGrid(grid);
             // evolve(grid);
             runControl = setInterval(function() { evolve(); }, frameTime);
@@ -97,14 +97,92 @@ var gol = (function() {
         }
     };
     
-    var seedKnown = function(gridSize) {
-        var a = [ [0,0,0,0,0], 
-                  [0,0,1,0,0],
-                  [0,0,1,0,0],
-                  [0,0,1,0,0],
-                  [0,0,0,0,0] ];
-        var known = a;
-        return known;
+    var seedKnown = function (gridSize) {
+        var trominoA = [
+            [0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0],
+            [0, 0, 1, 0, 0],
+            [0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0]];
+
+        var trominoB = [
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0],
+            [0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0]];
+
+        var trominoC = [
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 1, 1, 0],
+            [0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0]];
+
+
+        var trominoD = [
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0]];
+            
+        var glider = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 0, 0, 0, 0, 0, 0, 0]];
+            
+        var tetrominoA = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
+            
+        var tetrominoB = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
+
+
+        var known = glider;
+
+        for (var i = 0; i < gridSize; i++) {
+            var grid = [];
+            for (var i = 0; i < gridSize; i++) {
+                var row = [];
+                for (var j = 0; j < gridSize; j++) {
+                    // console.log("i" + i + "j" + j);
+                    gridToConsole(known);
+                    if (i < known.length - 1 && j < known[i].length - 1) {
+                        row[j] = known[i][j];
+                    } else {
+                        row[j] = CellEnum.DEAD;
+                    }
+                }
+                grid.push(row);
+            }
+        }
+        return grid;
     }; 
 
     var randInt = function(min, max) {
@@ -130,7 +208,7 @@ var gol = (function() {
             cellState = CellEnum.ALIVE
         }
         return cellState;
-    }
+    };
     
     function countLiveCells(grid) {
         var numLive = 0;
@@ -141,7 +219,7 @@ var gol = (function() {
             }
         }
         return numLive;
-    }
+    };
       
     var genNeighbourhood = function(v, h, grid) {
         var neighbourhood = [];  
@@ -216,17 +294,17 @@ var golDraw = (function() {
             gridNode.removeChild(gridNode.firstChild);
         }
         
-        gridNode.innerHTML = cells;        
-        // $('#grid').empty();
-        // $('#grid').append(cells); 
+        // gridNode.innerHTML = cells;        
+        $('#grid').empty();
+        $('#grid').append(cells); 
     };
     
     
     var initGridDimensions = function(size) {
         gridWidth = cellWidth * size;
         gridHeight = gridWidth;
-        // $('#grid').css("width", gridWidth);
-        // $('#grid').css("height", gridHeight);
+        $('#grid').css("width", gridWidth);
+        $('#grid').css("height", gridHeight);
     };
     
     return {
