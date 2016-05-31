@@ -1,4 +1,6 @@
 var gol = (function() {
+    "use strict";
+    
     const RunEnum = {
         RUN: 0,
         STOP: 1,
@@ -58,33 +60,20 @@ var gol = (function() {
         }
     };
     
-    var evolve = function() {
-        var last = grid;
+    var evolve = function () {
         gen++;
-        console.log("gen:" + gen); 
-        console.log(grid);
-        for(var rule in RuleEnum) {
-            var next = [];
-            console.log("rule:" + rule); 
-            for(var i = 0; i < gridSize; i++) {
-                var row = [];
-                for(var j = 0; j < gridSize; j++) {  
-                    row[j] = evalCell(j, i, last, RuleEnum[rule]);
-                }
-                console.log(i + ':' + row);
-                next.push(row);
+        var successor = [];
+        for (var i = 0; i < gridSize; i++) {
+            var row = [];
+            for (var j = 0; j < gridSize; j++) {
+                row[j] = evalCell(i, j, grid);
             }
-            // console.log("rule:" + rule);
-            console.log("gen:" + gen + "next:" + next); 
-            golDraw.drawGrid(next); 
-            // console.log("gen:" + gen + "last:" + last);
-            // console.log(last);
-            // console.log("gen:" + gen + "next:" + next);
-            // console.log(next);
-            last = next;
+            successor.push(row);
         }
-        grid = next;
-        console.log(grid);
+        grid = successor;
+        console.log("gen" + ':' + gen);  
+        gridToConsole(grid);
+        golDraw.drawGrid(grid);
     };
 
     var seedGrid = function(gridSize) {
@@ -99,101 +88,92 @@ var gol = (function() {
         return grid;
     };  
     
-    var seedKnown = function(gridSize) {
-        var known = [[0,0,0,0], [0,1,0,0],[0,1,1,0],[0,0,0,0]];
-        
-        for(var i = 0; i < known.length; i++) {
-            console.log(i + ':' + known[i]);
+    var gridToConsole = function(grid) {
+        // reverse print grid so that it is 
+        // aligned with coords
+        var length = grid.length - 1;
+        for(var i = length; i >= 0; i--) {
+            console.log(grid[i]);
         }
+    };
+    
+    var seedKnown = function(gridSize) {
+        var a = [ [0,0,0,0,0], 
+                  [0,0,1,0,0],
+                  [0,0,1,0,0],
+                  [0,0,1,0,0],
+                  [0,0,0,0,0] ];
+        var known = a;
         return known;
-        // for(var i = 0; i < gridSize; i++) {
-        //     var row = [];
-        //     for(var j = 0; j < gridSize; j++) {  
-        //         if()
-        //     }
-        //     grid.push(row);
-        // }
-        // return grid;
     }; 
 
     var randInt = function(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };  
-      
-    function evalCell(x, y, grid, rule) {
-        // console.log(x + ':' + y + ':' + grid[x][y]);
-        var neighbourhood = genNeighbourhood(x, y, grid);
-        var cellState = grid[x][y];
-        var numNeighbours = neighbourhood.length;
-        var numLiveNeighbours = 0;
-        for(var i = 0; i < numNeighbours; i++) {
-              if(neighbourhood[i] === CellEnum.ALIVE) {
-                  numLiveNeighbours++;
-              }         
-        }
-        
-        switch (rule) {
-            case RuleEnum.UNDER_POP:
-                // 1. Any live cell with fewer than two live neighbours dies, as if caused by under-population. 
-                if(grid[x][y] === CellEnum.ALIVE && numLiveNeighbours < 2) {
-                     cellState = CellEnum.DEAD;
-                }
-                break;
-            
-            case RuleEnum.NEXT_GEN:
-                // 2. Any live cell with two or three live neighbours lives on to the next generation.
-                if(grid[x][y] === CellEnum.ALIVE && numLiveNeighbours === 2 || numLiveNeighbours === 3) {
-                     cellState = CellEnum.ALIVE;
-                }
-                break;
-            
-            case RuleEnum.OVER_POP:
-                // 3. Any live cell with more than three live neighbours dies, as if by over-population.
-                if(grid[x][y] === CellEnum.ALIVE && numLiveNeighbours > 3) {
-                    cellState = CellEnum.DEAD;
-                }
-                break;
-            
-            case RuleEnum.REPRODUCE:
-                // 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-                if(grid[x][y] === CellEnum.DEAD && numLiveNeighbours === 3) {
-                    cellState = CellEnum.ALIVE
-                }
-                break;
+    
+    function evalCell(v, h, grid) {
+        var neighbourhood = genNeighbourhood(v, h, grid);
+        var cellState = grid[v][h];
+        var numLiveNeighbours = countLiveCells(neighbourhood);
+
+        if (cellState === CellEnum.ALIVE && numLiveNeighbours < 2) {
+            // 1. Any live cell with fewer than two live neighbours dies, as if caused by under-population. 
+            cellState = CellEnum.DEAD;
+        } else if (cellState === CellEnum.ALIVE && numLiveNeighbours === 2 || numLiveNeighbours === 3) {
+            // 2. Any live cell with two or three live neighbours lives on to the next generation.
+            cellState = CellEnum.ALIVE;
+        } else if (cellState === CellEnum.ALIVE && numLiveNeighbours > 3) {
+            // 3. Any live cell with more than three live neighbours dies, as if by over-population.
+            cellState = CellEnum.DEAD;
+        } else if (cellState === CellEnum.DEAD && numLiveNeighbours === 3) {
+            // 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+            cellState = CellEnum.ALIVE
         }
         return cellState;
-    };
+    }
     
-    var genNeighbourhood = function(x, y, grid) {
-        var neighbourhood = [];    
-        if(x === 0 && y === 0) {
+    function countLiveCells(grid) {
+        var numLive = 0;
+        var length = grid.length;
+        for (var i = 0; i < length; i++) {
+            if (grid[i] === CellEnum.ALIVE) {
+                numLive++;
+            }
+        }
+        return numLive;
+    }
+      
+    var genNeighbourhood = function(v, h, grid) {
+        var neighbourhood = [];  
+        // Note: convention is using (y,x) coords to align with 2d array iteration in memory
+        // where y is horizontal and x is vertical
+        if(v === 0 && h === 0) {
             // LOWER_LEFT
-            neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x+1][y] ];
-        } else if(x === gridSize-1 && y === 0) {
+            neighbourhood = [grid[v+1][h], grid[v+1][h+1], grid[v][h+1], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD];
+        } else if(v ===  0 && h === gridSize-1) {
             // LOWER_RIGHT
-            neighbourhood = [ grid[x][y+1], grid[x-1][y], grid[x-1][y+1],  ];
-        } else if(x === 0 && y === gridSize-1) {
+            neighbourhood = [grid[v+1][h], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, grid[v][h-1], grid[v+1][h-1]];
+        } else if(v === 0 && h === gridSize-1) {
             // TOP_LEFT
-            neighbourhood = [ grid[x+1][y], grid[x+1][y-1], grid[x][y-1] ];
-        } else if(x === gridSize-1 && y === gridSize-1) {
+            neighbourhood = [CellEnum.DEAD, CellEnum.DEAD, grid[v][h+1], grid[v-1][h+1], grid[v-1][h], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD];
+        } else if(v === gridSize-1 && h === gridSize-1) {
             // TOP_RIGHT
-            neighbourhood = [ grid[x][y-1], grid[x-1][y-1], grid[x-1][y] ];
-        } else if(y === 0) {
+            neighbourhood = [CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, grid[v-1][h], grid[v-1][h-1], grid[v][h-1], CellEnum.DEAD];
+        } else if(v === 0) {
             // LOWER_ROW
-            neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x+1][y], grid[x-1][y], grid[x-1][y+1] ];
-        } else if(y === gridSize-1) {
+            neighbourhood = [grid[v+1][h], grid[v+1][h+1], grid[v][h+1], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, grid[v][h-1], grid[v+1][h-1]];
+        } else if(v === gridSize-1) {
             // UPPER_ROW
-            neighbourhood = [ grid[x+1][y], grid[x+1][y-1], grid[x][y-1], grid[x-1][y-1], grid[x-1][y] ];
-        } else if(x === 0) {
+            neighbourhood = [CellEnum.DEAD, CellEnum.DEAD, grid[v][h+1], grid[v-1][h+1], grid[v-1][h], grid[v-1][h-1], grid[v][h-1], CellEnum.DEAD];
+        } else if(h === 0) {
             // LEFT_COLUMN
-            neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x][y+1], grid[x+1][y-1], grid[x][y-1] ];
-        } else if(x === gridSize-1) {
+            neighbourhood = [grid[v+1][h], grid[v+1][h+1], grid[v][h+1], grid[v-1][h+1], grid[v-1][h], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD];
+        } else if(h === gridSize-1) {
             // RIGHT_COLUMN
-            neighbourhood = [ grid[x][y+1], grid[x][y-1], grid[x-1][y-1], grid[x-1][y], grid[x-1][y+1] ];
+            neighbourhood = [grid[v+1][h], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, grid[v-1][h], grid[v-1][h-1], grid[v][h-1], grid[v+1][h-1]];
         } else {
             // CENTRAL
-            neighbourhood = [ grid[x][y+1], grid[x+1][y+1], grid[x+1][y], grid[x+1][y-1], 
-                                grid[x][y-1], grid[x-1][y-1], grid[x-1][y], grid[x-1][y+1] ];
+            neighbourhood = [grid[v+1][h], grid[v+1][h+1], grid[v][h+1], grid[v-1][h+1], grid[v-1][h], grid[v-1][h-1], grid[v][h-1], grid[v+1][h-1]];
         }
        
         return neighbourhood;
@@ -207,6 +187,7 @@ var gol = (function() {
 })();
 
 var golDraw = (function() {
+    "use strict";
     var cellWidth = 5;
     var gridWidth = 100;
     var gridHeight = 100;
@@ -221,7 +202,6 @@ var golDraw = (function() {
         initGridDimensions(rowSize);
         for(var i = rowSize - 1; i >= 0; i--) {
             for(var j = 0; j < rowSize; j++) { 
-                // console.log(i + ':' + j + ':' + grid[i][j]);
                 if(grid[i][j] === 0) {
                     cellState = dead;
                 } else {
@@ -231,16 +211,22 @@ var golDraw = (function() {
                     + cellState + "\"></div>";
             }
         }
-        $('#grid').empty();
-        $('#grid').append(cells); 
+        var gridNode = document.getElementById("grid");
+        while(gridNode.firstChild) {
+            gridNode.removeChild(gridNode.firstChild);
+        }
+        
+        gridNode.innerHTML = cells;        
+        // $('#grid').empty();
+        // $('#grid').append(cells); 
     };
     
     
     var initGridDimensions = function(size) {
         gridWidth = cellWidth * size;
         gridHeight = gridWidth;
-        $('#grid').css("width", gridWidth);
-        $('#grid').css("height", gridHeight);
+        // $('#grid').css("width", gridWidth);
+        // $('#grid').css("height", gridHeight);
     };
     
     return {
