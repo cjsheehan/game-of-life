@@ -9,19 +9,19 @@
 
 <body>
     <form>
-        Width <input type="number" name="gridwidth" id="gridwidth" value="10" min="10" max="100"> 
-        Height <input type="number" name="gridheight" id="gridheight" value="10" min="10" max="100"></br></br>
-        Delay(ms) <input type="number" name="delay" id="delay" value="200" min="200" max="1000"></br></br>
+        Width <input type="number" name="grid-width" id="grid-width" value="100" min="10" max="100"> 
+        Height <input type="number" name="grid-height" id="grid-height" value="100" min="10" max="100"></br></br>
+        Delay(ms) <input type="number" name="delay" id="delay" value="50" min="10" max="1000"></br></br>
     </form>
-    <input type="button" value="start" id="start"></input>
-    <input type="button" value="stop" id="stop"></br></br></input>
+    <input type="button" value="start" id="buttonStart"></input>
+    <input type="button" value="stop" id="buttonStop"></br></br></input>
     <div id="grid"></div>
 
     <script type="text/javascript">
         $(function() {
-            $("#start").click(function() {
-                var width = $('#gridwidth').val();
-                var height = $('#gridheight').val();
+            $("#buttonStart").click(function() {
+                var width = $('#grid-width').val();
+                var height = $('#grid-height').val();
                 var delay = $('#delay').val();
                 console.log("width" + width + "height" + height + "delay" + delay);
                 gol.setGridWidth(width);
@@ -30,7 +30,7 @@
                 gol.start();
             });
             
-            $("#stop").click(function() {
+            $("#buttonStop").click(function() {
                 gol.stop();
             });
             
