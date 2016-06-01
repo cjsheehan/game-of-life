@@ -94,7 +94,8 @@ var gol = (function() {
         for(var i = 0; i < height; i++) {
             var row = [];
             for(var j = 0; j < width; j++) {  
-                row[j] = randInt(0,1);
+                var rnd = randInt(0, 10);
+                row[j] = rnd > 1 ? row[j] = CellEnum.DEAD : row[j] = CellEnum.ALIVE;
             }
             grid.push(row);
         }
