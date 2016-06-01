@@ -30,25 +30,26 @@ var gol = (function() {
     };
     
     var grid = [];
+    var gridWidth = 100;
+    var gridHeight = 100;
+    var delay = 200; // ms
     var isRunning = false;
     var gen = 0;
     var runControl;
     var runState = RunEnum.STOP;
     var maxGens = 10;
-    var frameTime = 200; // ms
-    var gridSize;
+    // var gridSize;
     
     var start = function(size) {
         if(!isRunning) {
             isRunning = true;
-            gridSize = size;
             runState = RunEnum.RUN; 
             gen = 0;
-            grid = seedGrid(gridSize);
+            grid = seedGrid(gridWidth, gridHeight);
             // grid = seedKnown(gridSize);
             golDraw.drawGrid(grid);
             // evolve(grid);
-            runControl = setInterval(function() { evolve(); }, frameTime);
+            runControl = setInterval(function() { evolve(); }, delay);
         }
     };  
     
@@ -60,27 +61,39 @@ var gol = (function() {
         }
     };
     
+    var setGridWidth = function(width) {
+          gridWidth = width;
+    };
+    
+    var setGridHeight = function(height) {
+        gridHeight = height;
+    };
+    
+    var setDelay = function(delay) {
+        delay = delay;
+    };
+    
     var evolve = function () {
         gen++;
         var successor = [];
-        for (var i = 0; i < gridSize; i++) {
+        for (var i = 0; i < gridHeight; i++) {
             var row = [];
-            for (var j = 0; j < gridSize; j++) {
+            for (var j = 0; j < gridWidth; j++) {
                 row[j] = evalCell(i, j, grid);
             }
             successor.push(row);
         }
         grid = successor;
-        console.log("gen" + ':' + gen);  
-        gridToConsole(grid);
+        // console.log("gen" + ':' + gen);  
+        // gridToConsole(grid);
         golDraw.drawGrid(grid);
     };
 
-    var seedGrid = function(gridSize) {
+    var seedGrid = function(width, height) {
         var grid = [];
-        for(var i = 0; i < gridSize; i++) {
+        for(var i = 0; i < height; i++) {
             var row = [];
-            for(var j = 0; j < gridSize; j++) {  
+            for(var j = 0; j < width; j++) {  
                 row[j] = randInt(0,1);
             }
             grid.push(row);
@@ -91,13 +104,13 @@ var gol = (function() {
     var gridToConsole = function(grid) {
         // reverse print grid so that it is 
         // aligned with coords
-        var length = grid.length - 1;
-        for(var i = length; i >= 0; i--) {
+        var height = grid.length - 1;
+        for(var i = height; i >= 0; i--) {
             console.log(grid[i]);
         }
     };
     
-    var seedKnown = function (gridSize) {
+    var seedKnown = function (width, height) {
         var trominoA = [
             [0, 0, 0, 0, 0],
             [0, 0, 1, 0, 0],
@@ -166,13 +179,13 @@ var gol = (function() {
 
         var known = glider;
 
-        for (var i = 0; i < gridSize; i++) {
+        for (var i = 0; i < height; i++) {
             var grid = [];
-            for (var i = 0; i < gridSize; i++) {
+            for (var i = 0; i < height; i++) {
                 var row = [];
-                for (var j = 0; j < gridSize; j++) {
+                for (var j = 0; j < width; j++) {
                     // console.log("i" + i + "j" + j);
-                    gridToConsole(known);
+                    // gridToConsole(known);
                     if (i < known.length - 1 && j < known[i].length - 1) {
                         row[j] = known[i][j];
                     } else {
@@ -228,25 +241,25 @@ var gol = (function() {
         if(v === 0 && h === 0) {
             // LOWER_LEFT
             neighbourhood = [grid[v+1][h], grid[v+1][h+1], grid[v][h+1], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD];
-        } else if(v ===  0 && h === gridSize-1) {
+        } else if(v ===  0 && h === gridWidth-1) {
             // LOWER_RIGHT
             neighbourhood = [grid[v+1][h], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, grid[v][h-1], grid[v+1][h-1]];
-        } else if(v === 0 && h === gridSize-1) {
+        } else if(v === 0 && h === gridWidth-1) {
             // TOP_LEFT
             neighbourhood = [CellEnum.DEAD, CellEnum.DEAD, grid[v][h+1], grid[v-1][h+1], grid[v-1][h], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD];
-        } else if(v === gridSize-1 && h === gridSize-1) {
+        } else if(v === gridHeight-1 && h === gridWidth-1) {
             // TOP_RIGHT
             neighbourhood = [CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, grid[v-1][h], grid[v-1][h-1], grid[v][h-1], CellEnum.DEAD];
         } else if(v === 0) {
             // LOWER_ROW
             neighbourhood = [grid[v+1][h], grid[v+1][h+1], grid[v][h+1], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, grid[v][h-1], grid[v+1][h-1]];
-        } else if(v === gridSize-1) {
+        } else if(v === gridHeight-1) {
             // UPPER_ROW
             neighbourhood = [CellEnum.DEAD, CellEnum.DEAD, grid[v][h+1], grid[v-1][h+1], grid[v-1][h], grid[v-1][h-1], grid[v][h-1], CellEnum.DEAD];
         } else if(h === 0) {
             // LEFT_COLUMN
             neighbourhood = [grid[v+1][h], grid[v+1][h+1], grid[v][h+1], grid[v-1][h+1], grid[v-1][h], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD];
-        } else if(h === gridSize-1) {
+        } else if(h === gridWidth-1) {
             // RIGHT_COLUMN
             neighbourhood = [grid[v+1][h], CellEnum.DEAD, CellEnum.DEAD, CellEnum.DEAD, grid[v-1][h], grid[v-1][h-1], grid[v][h-1], grid[v+1][h-1]];
         } else {
@@ -259,7 +272,10 @@ var gol = (function() {
       
     return {
         start: start,
-        stop: stop
+        stop: stop,
+        setGridWidth: setGridWidth,
+        setGridHeight: setGridHeight,
+        setDelay: setDelay
     };    
     
 })();
@@ -270,16 +286,18 @@ var golDraw = (function() {
     var gridWidth = 100;
     var gridHeight = 100;
     var alive = "alive";
-    var dead = "dead";    
+    var dead = "dead";
+    var gridElem;    
     
     var drawGrid = function(grid) {
-        var rowSize = grid.length;
+        var height = grid.length;
+        var width = grid[0].length;
         var cells = '';
         var cellState = alive;
 
-        initGridDimensions(rowSize);
-        for(var i = rowSize - 1; i >= 0; i--) {
-            for(var j = 0; j < rowSize; j++) { 
+        initGridDimensions(width, height);
+        for(var i = 0; i < height; i++) {
+            for(var j = 0; j < width; j++) { 
                 if(grid[i][j] === 0) {
                     cellState = dead;
                 } else {
@@ -289,20 +307,21 @@ var golDraw = (function() {
                     + cellState + "\"></div>";
             }
         }
-        var gridNode = document.getElementById("grid");
-        while(gridNode.firstChild) {
-            gridNode.removeChild(gridNode.firstChild);
-        }
+        // var gridNode = document.getElementById("grid");
+        // while(gridNode.firstChild) {
+        //     gridNode.removeChild(gridNode.firstChild);
+        // }
         
-        // gridNode.innerHTML = cells;        
-        $('#grid').empty();
-        $('#grid').append(cells); 
+        // gridNode.innerHTML = cells;  
+        gridElem = $('#grid');    
+        gridElem.empty();
+        gridElem.append(cells); 
     };
     
     
-    var initGridDimensions = function(size) {
-        gridWidth = cellWidth * size;
-        gridHeight = gridWidth;
+    var initGridDimensions = function(width, height) {
+        gridWidth = cellWidth * width;
+        gridHeight = cellWidth * height;
         $('#grid').css("width", gridWidth);
         $('#grid').css("height", gridHeight);
     };
